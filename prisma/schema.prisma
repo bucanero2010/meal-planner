@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Recipe {
+  id          String   @id @default(cuid())
+  name        String
+  cookedBy    CookedBy // who can cook it
+  meals       Int      @default(1) // 1 or 2 (how many meal slots it covers)
+  prepTime    Int      // minutes
+  difficulty  Difficulty
+  cost        Cost
+  tags        String[] // e.g. ["pasta", "asian", "soup"]
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ingredients RecipeIngredient[]
+  planSlots   PlanSlot[]
+}
+
+model Ingredient {
+  id       String   @id @default(cuid())
+  name     String   @unique
+  category IngredientCategory
+  unit     String   // e.g. "g", "ml", "pieces", "units"
+
+  recipes RecipeIngredient[]
+}
+
+model RecipeIngredient {
+  id           String @id @default(cuid())
+  quantity     Float
+  recipeId     String
+  ingredientId String
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@unique([recipeId, ingredientId])
+}
+
+model WeeklyPlan {
+  id        String   @id @default(cuid())
+  weekStart DateTime // Monday of that week
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  slots PlanSlot[]
+
+  @@unique([weekStart])
+}
+
+model PlanSlot {
+  id       String   @id @default(cuid())
+  day      Int      // 0=Monday, 6=Sunday
+  meal     MealType // LUNCH or DINNER
+  cookedBy CookedBy // who actually cooks this slot
+  planId   String
+  recipeId String
+
+  plan   WeeklyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  recipe Recipe     @relation(fields: [recipeId], references: [id])
+
+  @@unique([planId, day, meal])
+}
+
+model PantryStaple {
+  id           String @id @default(cuid())
+  ingredientId String @unique
+  // Ingredients you always have — excluded from grocery list
+}
+
+// Enums
+
+enum CookedBy {
+  ME
+  PARTNER
+  BOTH
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  INVOLVED
+}
+
+enum Cost {
+  CHEAP
+  MODERATE
+  EXPENSIVE
+}
+
+enum MealType {
+  LUNCH
+  DINNER
+}
+
+enum IngredientCategory {
+  PRODUCE
+  DAIRY
+  PROTEIN
+  GRAINS
+  PANTRY
+  FROZEN
+  SPICES
+  OTHER
+}

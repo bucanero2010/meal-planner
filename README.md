@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍳 Meal Planner
+
+Weekly meal planning app for two people. Manages recipes, generates balanced weekly plans, and creates grocery lists.
+
+## Features
+
+- **Recipe management** — add recipes with who cooks, prep time, cost, difficulty, tags, ingredients
+- **Auto-scheduling** — generates a 14-slot weekly plan (lunch + dinner × 7 days) balancing cook assignments, cost, time, and variety
+- **Grocery list** — aggregates ingredients from the plan, grouped by category, with pantry staple exclusion
+- **PWA** — installable on phones, works like a native app
+
+## Tech Stack
+
+- Next.js 16 (App Router)
+- TypeScript
+- Tailwind CSS
+- Prisma ORM + PostgreSQL
+- next-pwa for installability
+- Deployed on Vercel
 
 ## Getting Started
 
-First, run the development server:
+### 1. Database Setup
+
+You need a PostgreSQL database. Options:
+
+- **Vercel Postgres** (recommended for deployment): create one in your Vercel dashboard
+- **Supabase** (free tier): create a project at supabase.com
+- **Local**: `createdb mealplanner`
+
+### 2. Environment
+
+Copy `.env` and set your database URL:
+
+```bash
+DATABASE_URL="postgresql://user:password@host:5432/mealplanner"
+```
+
+### 3. Install & Migrate
+
+```bash
+npm install
+npx prisma migrate dev --name init
+```
+
+### 4. Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 5. Deploy to Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npx vercel
+```
 
-## Learn More
+Add your `DATABASE_URL` as an environment variable in Vercel's dashboard.
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/
+│   ├── page.tsx              # Weekly plan view (home)
+│   ├── recipes/
+│   │   ├── page.tsx          # Recipe list
+│   │   └── new/page.tsx      # Add recipe form
+│   ├── grocery/page.tsx      # Grocery list
+│   └── api/
+│       ├── recipes/          # CRUD
+│       ├── ingredients/      # CRUD
+│       ├── plan/             # Save/load plans
+│       │   └── generate/     # Auto-schedule
+│       └── grocery/          # Generate grocery list
+├── lib/
+│   ├── db.ts                 # Prisma client singleton
+│   ├── scheduler.ts          # Scheduling algorithm
+│   └── grocery.ts            # Grocery list aggregation
+└── types/
+    └── next-pwa.d.ts
+prisma/
+└── schema.prisma             # Data model
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scheduling Algorithm
 
-## Deploy on Vercel
+The scheduler:
+1. Shuffles the recipe pool for variety between runs
+2. Fills 14 slots sequentially (Mon lunch → Sun dinner)
+3. Each recipe can only be placed once per week (one cooking event)
+4. 2-meal recipes cover 2 consecutive slots
+5. Scores candidates per slot based on: time fit (quick on weekdays), cook balance, tag diversity, cost balance
+6. Picks the highest-scoring candidate for each slot
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Next Steps (v2)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [ ] Ingredient management UI (currently API-only)
+- [ ] Edit/delete recipes from the UI
+- [ ] Swap individual slots in the generated plan
+- [ ] Pantry staples configuration
+- [ ] Share grocery list (copy to clipboard / share API)
+- [ ] History view of past weeks
