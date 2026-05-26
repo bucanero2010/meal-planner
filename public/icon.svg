@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="102.4" fill="#16a34a"/>
+  
+  <!-- Steam -->
+  <path d="M204.8 184.32 c0 -20.48 15.36 -30.72 0 -51.2" stroke="white" stroke-width="11.264" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M256 174.07999999999998 c0 -20.48 -15.36 -30.72 0 -51.2" stroke="white" stroke-width="11.264" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M307.2 184.32 c0 -20.48 15.36 -30.72 0 -51.2" stroke="white" stroke-width="11.264" fill="none" stroke-linecap="round" opacity="0.6"/>
+  
+  <!-- Lid -->
+  <ellipse cx="256" cy="215.04" rx="133.12" ry="17.92" fill="white"/>
+  <rect x="245.76" y="184.32" width="20.48" height="23.04" rx="7.68" fill="white"/>
+  
+  <!-- Pot -->
+  <path d="M128 225.28 L140.8 389.12 L371.2 389.12 L384 225.28 Z" fill="white"/>
+  
+  <!-- Handles -->
+  <rect x="99.84" y="258.048" width="25.6" height="30.72" rx="10.24" fill="white"/>
+  <rect x="386.56" y="258.048" width="25.6" height="30.72" rx="10.24" fill="white"/>
+  
+  <!-- Week dots -->
+  <g opacity="0.5">
+    <circle cx="158.72" cy="323.584" r="10.24" fill="#16a34a"/>
+    <circle cx="191.14666666666668" cy="323.584" r="10.24" fill="#16a34a"/>
+    <circle cx="223.57333333333332" cy="323.584" r="10.24" fill="#16a34a"/>
+    <circle cx="256" cy="323.584" r="10.24" fill="#16a34a"/>
+    <circle cx="288.4266666666667" cy="323.584" r="10.24" fill="#16a34a"/>
+    <circle cx="320.85333333333335" cy="323.584" r="10.24" fill="#16a34a"/>
+    <circle cx="353.28000000000003" cy="323.584" r="10.24" fill="#16a34a"/>
+  </g>
+</svg>
