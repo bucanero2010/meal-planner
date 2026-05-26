@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface Ingredient {
@@ -28,8 +28,11 @@ const CATEGORIES = [
   "OTHER",
 ];
 
-export default function NewRecipePage() {
+export default function EditRecipePage() {
   const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
+
   const [form, setForm] = useState({
     name: "",
     cookedBy: "BOTH",
@@ -41,6 +44,7 @@ export default function NewRecipePage() {
     notes: "",
   });
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Ingredients state
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -53,10 +57,36 @@ export default function NewRecipePage() {
   });
 
   useEffect(() => {
+    // Load recipe
+    fetch(`/api/recipes/${id}`)
+      .then((r) => r.json())
+      .then((recipe) => {
+        setForm({
+          name: recipe.name,
+          cookedBy: recipe.cooked_by,
+          meals: recipe.meals,
+          prepTime: recipe.prep_time,
+          difficulty: recipe.difficulty,
+          cost: recipe.cost,
+          tags: (recipe.tags || []).join(", "),
+          notes: recipe.notes || "",
+        });
+        setRecipeIngredients(
+          (recipe.recipe_ingredients || []).map((ri: any) => ({
+            ingredientId: ri.ingredient_id,
+            name: ri.ingredients?.name || "",
+            quantity: String(ri.quantity),
+            unit: ri.ingredients?.unit || "",
+          }))
+        );
+        setLoading(false);
+      });
+
+    // Load all ingredients
     fetch("/api/ingredients")
       .then((r) => r.json())
       .then(setIngredients);
-  }, []);
+  }, [id]);
 
   async function handleAddNewIngredient() {
     if (!newIngredient.name.trim()) return;
@@ -102,11 +132,13 @@ export default function NewRecipePage() {
   async function handleSubmit() {
     setSaving(true);
 
-    const res = await fetch("/api/recipes", {
-      method: "POST",
+    const res = await fetch(`/api/recipes/${id}`, {
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...form,
+        cookedBy: form.cookedBy,
+        prepTime: form.prepTime,
         tags: form.tags
           .split(",")
           .map((t) => t.trim())
@@ -127,16 +159,29 @@ export default function NewRecipePage() {
     }
   }
 
-  // Filter out already-added ingredients for the picker
+  async function handleDelete() {
+    if (!confirm("Delete this recipe?")) return;
+
+    const res = await fetch(`/api/recipes/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      router.push("/recipes");
+    } else {
+      alert("Error deleting recipe");
+    }
+  }
+
   const availableIngredients = ingredients.filter(
     (ing) => !recipeIngredients.some((ri) => ri.ingredientId === ing.id)
   );
 
+  if (loading) {
+    return <div className="pb-28"><p className="text-gray-500 text-center py-8">Loading...</p></div>;
+  }
+
   return (
     <div className="pb-28 space-y-4">
-      <h2 className="text-xl font-bold">New Recipe</h2>
+      <h2 className="text-xl font-bold">Edit Recipe</h2>
 
-      {/* Recipe basic info */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
         <input
@@ -144,7 +189,6 @@ export default function NewRecipePage() {
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-          placeholder="e.g. Lentil Soup"
         />
       </div>
 
@@ -219,11 +263,10 @@ export default function NewRecipePage() {
           value={form.tags}
           onChange={(e) => setForm({ ...form, tags: e.target.value })}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-          placeholder="e.g. soup, legumes, vegetarian"
         />
       </div>
 
-      {/* Ingredients Section — NOT inside a form */}
+      {/* Ingredients Section */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Ingredients</label>
 
@@ -239,9 +282,7 @@ export default function NewRecipePage() {
                   type="text"
                   inputMode="decimal"
                   value={ri.quantity}
-                  onChange={(e) =>
-                    handleQuantityChange(ri.ingredientId, e.target.value)
-                  }
+                  onChange={(e) => handleQuantityChange(ri.ingredientId, e.target.value)}
                   className="w-20 border border-gray-300 rounded px-2 py-1 text-sm text-right"
                 />
                 <span className="text-xs text-gray-600 w-12">{ri.unit}</span>
@@ -347,17 +388,23 @@ export default function NewRecipePage() {
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
           rows={3}
-          placeholder="Optional notes, tips, variations..."
         />
       </div>
 
-      {/* Save button */}
+      {/* Actions */}
       <button
         onClick={handleSubmit}
         disabled={saving || !form.name.trim()}
         className="w-full bg-green-600 text-white py-3 rounded-lg font-medium disabled:opacity-50"
       >
-        {saving ? "Saving..." : "Save Recipe"}
+        {saving ? "Saving..." : "Save Changes"}
+      </button>
+
+      <button
+        onClick={handleDelete}
+        className="w-full border border-red-300 text-red-600 py-3 rounded-lg font-medium"
+      >
+        Delete Recipe
       </button>
     </div>
   );

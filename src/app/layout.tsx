@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import BottomNav from "@/components/BottomNav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,27 +41,14 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-gray-50 text-gray-900">
+      <body className="min-h-full flex flex-col text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-900">
         <header className="bg-green-600 text-white px-4 py-3 shadow-sm">
           <h1 className="text-lg font-semibold">🍳 Meal Planner</h1>
         </header>
         <main className="flex-1 p-4 max-w-2xl mx-auto w-full">
           {children}
         </main>
-        <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 flex justify-around py-2 text-xs">
-          <a href="/" className="flex flex-col items-center gap-1 text-green-600">
-            <span className="text-lg">📅</span>
-            <span>Plan</span>
-          </a>
-          <a href="/recipes" className="flex flex-col items-center gap-1 text-gray-500 hover:text-green-600">
-            <span className="text-lg">📖</span>
-            <span>Recipes</span>
-          </a>
-          <a href="/grocery" className="flex flex-col items-center gap-1 text-gray-500 hover:text-green-600">
-            <span className="text-lg">🛒</span>
-            <span>Grocery</span>
-          </a>
-        </nav>
+        <BottomNav />
       </body>
     </html>
   );

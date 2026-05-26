@@ -1,25 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { supabase } from "@/lib/db";
 
-// GET /api/ingredients — list all ingredients
+// GET /api/ingredients
 export async function GET() {
-  const ingredients = await prisma.ingredient.findMany({
-    orderBy: { name: "asc" },
-  });
-  return NextResponse.json(ingredients);
+  const { data, error } = await supabase
+    .from("ingredients")
+    .select("*")
+    .order("name");
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data);
 }
 
-// POST /api/ingredients — create an ingredient
+// POST /api/ingredients
 export async function POST(request: NextRequest) {
   const body = await request.json();
 
-  const ingredient = await prisma.ingredient.create({
-    data: {
-      name: body.name,
-      category: body.category,
-      unit: body.unit,
-    },
-  });
+  const { data, error } = await supabase
+    .from("ingredients")
+    .insert({ name: body.name, category: body.category, unit: body.unit })
+    .select()
+    .single();
 
-  return NextResponse.json(ingredient, { status: 201 });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data, { status: 201 });
 }

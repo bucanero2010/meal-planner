@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { supabase } from "@/lib/db";
 
 // GET /api/recipes/:id
 export async function GET(
@@ -7,17 +7,23 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const recipe = await prisma.recipe.findUnique({
-    where: { id },
-    include: {
-      ingredients: { include: { ingredient: true } },
-    },
-  });
 
-  if (!recipe) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-  return NextResponse.json(recipe);
+  const { data, error } = await supabase
+    .from("recipes")
+    .select(`
+      *,
+      recipe_ingredients (
+        id,
+        quantity,
+        ingredient_id,
+        ingredients (id, name, category, unit)
+      )
+    `)
+    .eq("id", id)
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 404 });
+  return NextResponse.json(data);
 }
 
 // PUT /api/recipes/:id
@@ -28,35 +34,40 @@ export async function PUT(
   const { id } = await params;
   const body = await request.json();
 
-  // Delete existing ingredients and recreate
-  await prisma.recipeIngredient.deleteMany({ where: { recipeId: id } });
-
-  const recipe = await prisma.recipe.update({
-    where: { id },
-    data: {
+  // Update recipe
+  const { error: recipeError } = await supabase
+    .from("recipes")
+    .update({
       name: body.name,
-      cookedBy: body.cookedBy,
+      cooked_by: body.cookedBy,
       meals: body.meals,
-      prepTime: body.prepTime,
+      prep_time: body.prepTime,
       difficulty: body.difficulty,
       cost: body.cost,
       tags: body.tags ?? [],
       notes: body.notes ?? null,
-      ingredients: {
-        create: (body.ingredients ?? []).map(
-          (ing: { ingredientId: string; quantity: number }) => ({
-            ingredientId: ing.ingredientId,
-            quantity: ing.quantity,
-          })
-        ),
-      },
-    },
-    include: {
-      ingredients: { include: { ingredient: true } },
-    },
-  });
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
 
-  return NextResponse.json(recipe);
+  if (recipeError) return NextResponse.json({ error: recipeError.message }, { status: 500 });
+
+  // Replace ingredients
+  await supabase.from("recipe_ingredients").delete().eq("recipe_id", id);
+
+  if (body.ingredients && body.ingredients.length > 0) {
+    const recipeIngredients = body.ingredients.map(
+      (ing: { ingredientId: string; quantity: number }) => ({
+        recipe_id: id,
+        ingredient_id: ing.ingredientId,
+        quantity: ing.quantity,
+      })
+    );
+
+    await supabase.from("recipe_ingredients").insert(recipeIngredients);
+  }
+
+  return NextResponse.json({ success: true });
 }
 
 // DELETE /api/recipes/:id
@@ -65,6 +76,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  await prisma.recipe.delete({ where: { id } });
+  const { error } = await supabase.from("recipes").delete().eq("id", id);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }

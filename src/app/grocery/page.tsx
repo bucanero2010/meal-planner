@@ -92,7 +92,7 @@ export default function GroceryPage() {
               <h3 className="text-sm font-semibold text-gray-600 mb-1">
                 {CATEGORY_LABELS[category] || category}
               </h3>
-              <div className="bg-white rounded-lg shadow-sm divide-y divide-gray-100">
+              <div className="border border-gray-300 rounded-lg divide-y divide-gray-200">
                 {items.map((item) => (
                   <label
                     key={item.ingredientId}

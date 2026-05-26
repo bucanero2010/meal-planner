@@ -5,12 +5,10 @@
  * groups by category, and excludes pantry staples.
  */
 
-import { IngredientCategory } from "@prisma/client";
-
 export interface GroceryItem {
   ingredientId: string;
   name: string;
-  category: IngredientCategory;
+  category: string;
   quantity: number;
   unit: string;
 }
@@ -23,7 +21,7 @@ export interface GroceryList {
 interface RecipeIngredientInput {
   ingredientId: string;
   ingredientName: string;
-  category: IngredientCategory;
+  category: string;
   quantity: number;
   unit: string;
 }
@@ -36,7 +34,6 @@ export function generateGroceryList(
   recipeIngredients: RecipeIngredientInput[],
   pantryStapleIds: Set<string>
 ): GroceryList {
-  // Aggregate quantities by ingredient
   const aggregated = new Map<string, GroceryItem>();
 
   for (const ri of recipeIngredients) {
@@ -60,12 +57,10 @@ export function generateGroceryList(
     a.category.localeCompare(b.category) || a.name.localeCompare(b.name)
   );
 
-  // Group by category
   const byCategory: Record<string, GroceryItem[]> = {};
   for (const item of items) {
-    const cat = item.category;
-    if (!byCategory[cat]) byCategory[cat] = [];
-    byCategory[cat].push(item);
+    if (!byCategory[item.category]) byCategory[item.category] = [];
+    byCategory[item.category].push(item);
   }
 
   return { items, byCategory };
