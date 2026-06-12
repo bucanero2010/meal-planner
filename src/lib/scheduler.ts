@@ -154,6 +154,9 @@ export function generateWeeklyPlan(
         if (r.meals === 2) {
           if (slotIdx + 1 >= 14) return false;
           if (plan[slotIdx + 1] !== null) return false;
+          // 2-meal recipes must be cooked at LUNCH (leftovers for same-day dinner).
+          // Lunch slots are even indices (0, 2, 4, ...), dinner slots are odd.
+          if (slot.meal !== "LUNCH") return false;
         }
         return true;
       })
